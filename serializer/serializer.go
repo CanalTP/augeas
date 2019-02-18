@@ -6,7 +6,7 @@ import (
 	"github.com/CanalTP/augeas/model"
 )
 
-type carParkResposne struct {
+type carParkResponse struct {
 	ID           string  `json:"id"`
 	Name         string  `json:"name"`
 	Lon          float64 `json:"lon"`
@@ -19,23 +19,23 @@ type carParkResposne struct {
 }
 
 type carParksResponse struct {
-	CarParks []*carParkResposne `json:"car_parks"`
+	CarParks []carParkResponse `json:"car_parks"`
 }
 
 type durationResponse struct {
-	CarPark  carParkResposne `json:"car_park"`
-	Distance int             `json:"distance"`
-	Duration int             `json:"duration"`
+	CarPark  carParkResponse `json:"car_park"`
+	Distance uint64          `json:"distance"`
+	Duration uint64          `json:"duration"`
 }
 
 type durationsResponse struct {
-	Durations []*durationResponse `json:"durations"`
+	Durations []durationResponse `json:"durations"`
 }
 
-func SerializeCarParks(parks []*model.CarPark) carParksResponse {
-	ret := make([]*carParkResposne, len(parks))
+func SerializeCarParks(parks []model.CarPark) carParksResponse {
+	ret := make([]carParkResponse, len(parks))
 	for i, p := range parks {
-		ret[i] = &carParkResposne{
+		ret[i] = carParkResponse{
 			ID:           p.ID,
 			Name:         p.Name,
 			Lon:          p.Lon(),
@@ -52,12 +52,16 @@ func SerializeCarParks(parks []*model.CarPark) carParksResponse {
 	}
 }
 
-func SerializeDurations(target *model.Coordinate, speed float64, maxParkingDuration uint64, parks []*model.CarPark) durationsResponse {
-	ret := make([]*durationResponse, len(parks))
-	for i, p := range parks {
-		d := target.Distance(p)
-		ret[i] = &durationResponse{
-			carParkResposne{
+func SerializeDurations(target *model.Coordinate, speed float64, maxParkingDuration uint64, parks []model.CarPark) durationsResponse {
+	ret := make([]durationResponse, 0)
+	for _, p := range parks {
+		distance := target.Distance(&p)
+		duration := uint64(distance * math.Sqrt(2) / speed)
+		if duration > maxParkingDuration {
+			continue
+		}
+		ret = append(ret, durationResponse{
+			carParkResponse{
 				ID:           p.ID,
 				Name:         p.Name,
 				Lon:          p.Lon(),
@@ -68,9 +72,9 @@ func SerializeDurations(target *model.Coordinate, speed float64, maxParkingDurat
 				AvailablePRM: p.AvailablePRM,
 				OccupiedPRM:  p.OccupiedPRM,
 			},
-			int(d),
-			int(math.Min(d*1.414/speed, float64(maxParkingDuration))),
-		}
+			uint64(distance),
+			duration,
+		})
 	}
 	return durationsResponse{
 		Durations: ret,

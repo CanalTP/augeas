@@ -1,8 +1,8 @@
 package augeas
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/CanalTP/augeas/model"
 	"github.com/CanalTP/augeas/serializer"
@@ -18,41 +18,26 @@ func GetCarParksHanlder(dm *DataManager) gin.HandlerFunc {
 func GetCarParkByIDHanlder(dm *DataManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("car_park_id")
-		c.JSON(http.StatusOK, serializer.SerializeCarParks(dm.GetCarParkByID(&id)))
+		c.JSON(http.StatusOK, serializer.SerializeCarParks(dm.GetCarParkByID(id)))
 	}
 }
 
 type durationParams struct {
-	Lon                float64
-	Lat                float64
-	N                  uint64
-	WalkingSpeed       float64
-	MaxParkingDuration uint64
+	Lon             float64 `form:"lon"`
+	Lat             float64 `form:"lat"`
+	N               uint64  `form:"n,default=5"`
+	WalkingSpeed    float64 `form:"walking_speed,default=1.11"`
+	MaxParkDuration uint64  `form:"max_park_duration,default=1200"`
 }
 
 func getParams(c *gin.Context) (*durationParams, error) {
-	lon, err := strconv.ParseFloat(c.Query("lon"), 64)
+	var params durationParams
+	err := c.Bind(&params)
 	if err != nil {
 		return nil, err
 	}
-	lat, err := strconv.ParseFloat(c.Query("lat"), 64)
-	if err != nil {
-		return nil, err
-	}
-	n, err := strconv.ParseUint(c.DefaultQuery("n", "5"), 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	walkingSpeed, err := strconv.ParseFloat(c.DefaultQuery("walking_speed", "1.11"), 64)
-	if err != nil {
-		return nil, err
-	}
-	maxParkingDuration, err := strconv.ParseUint(c.DefaultQuery("max_parking_duration", "1200"), 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	return &durationParams{lon, lat, n, walkingSpeed, maxParkingDuration}, nil
+	fmt.Println(params)
+	return &params, nil
 }
 
 func GetParkDurationHandler(dm *DataManager) gin.HandlerFunc {
@@ -63,9 +48,9 @@ func GetParkDurationHandler(dm *DataManager) gin.HandlerFunc {
 			return
 		}
 
-		targetPoint := model.Coordinate{[2]float64{params.Lon, params.Lat}}
+		targetPoint := model.Coordinate{Coords: [2]float64{params.Lon, params.Lat}}
 		neighbours := dm.GetNearestCarPark(&targetPoint, params.N)
 
-		c.JSON(http.StatusOK, serializer.SerializeDurations(&targetPoint, params.WalkingSpeed, params.MaxParkingDuration, neighbours))
+		c.JSON(http.StatusOK, serializer.SerializeDurations(&targetPoint, params.WalkingSpeed, params.MaxParkDuration, neighbours))
 	}
 }

@@ -10,9 +10,9 @@ import (
 	"github.com/CanalTP/augeas/model"
 )
 
-func newCarPark(record []string, carParkType *string) (*model.CarPark, error) {
+func newCarPark(record []string, carParkType string) (*model.CarPark, error) {
 	poiType := record[6]
-	if poiType != *carParkType {
+	if poiType != carParkType {
 		return nil, nil
 	}
 	id := record[0]
@@ -37,32 +37,35 @@ func newCarPark(record []string, carParkType *string) (*model.CarPark, error) {
 	}, nil
 }
 
-func ParsePoi(poiFile *string, carParkType *string, csvComma *string) []*model.CarPark {
-	f, err := os.Open(*poiFile)
+func ParsePoi(poiFile string, carParkType string, csvComma string) []model.CarPark {
+	f, err := os.Open(poiFile)
 	defer f.Close()
 
 	if err != nil {
+		log.Panicln(err)
 		panic(err)
 	}
 	csvr := csv.NewReader(f)
-	csvr.Comma = ([]rune(*csvComma))[0]
+	csvr.Comma = ([]rune(csvComma))[0]
 
 	if err != nil {
 		log.Panicln(err)
+		panic(err)
 	}
 
-	carParks := make([]*model.CarPark, 0)
+	carParks := make([]model.CarPark, 0)
 
 	// Skip the first line (Header)
 	csvr.Read()
 
-	log.Printf("Parsing poi file: %s with carParcType: %s", *poiFile, *carParkType)
+	log.Printf("Parsing poi file: %s with carParcType: %s", poiFile, carParkType)
 	for {
 		row, err := csvr.Read()
 
 		if err != nil {
 			if err != io.EOF {
 				log.Panicln(err)
+				continue
 			} else {
 				break
 			}
@@ -70,11 +73,12 @@ func ParsePoi(poiFile *string, carParkType *string, csvComma *string) []*model.C
 		cp, err := newCarPark(row, carParkType)
 		if err != nil {
 			log.Panicln(err)
+			continue
 		}
 		if cp == nil {
 			continue
 		}
-		carParks = append(carParks, cp)
+		carParks = append(carParks, *cp)
 	}
 	log.Printf("Finishing reading. %d car parks have been found", len(carParks))
 

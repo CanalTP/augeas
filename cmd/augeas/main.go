@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func SetupRouter(dm *augeas.DataManager) *gin.Engine {
+	router := gin.Default()
+
+	router.GET("/v0/car_parks", augeas.GetCarParksHanlder(dm))
+	router.GET("/v0/car_parks/:car_park_id", augeas.GetCarParkByIDHanlder(dm))
+	router.GET("/v0/park_duration", augeas.GetParkDurationHandler(dm))
+
+	return router
+}
+
 func main() {
 
 	poiFile := flag.String("poi", "", "poi.txt file's path")
@@ -16,15 +26,11 @@ func main() {
 
 	flag.Parse()
 
-	carParks := poi_parser.ParsePoi(poiFile, carParkType, csvComma)
+	carParks := poi_parser.ParsePoi(*poiFile, *carParkType, *csvComma)
 
 	dm := augeas.NewDataManager(carParks)
 
-	router := gin.Default()
-
-	router.GET("/v0/car_parks", augeas.GetCarParksHanlder(dm))
-	router.GET("/v0/car_parks/:car_park_id", augeas.GetCarParkByIDHanlder(dm))
-	router.GET("/v0/park_duration", augeas.GetParkDurationHandler(dm))
+	router := SetupRouter(dm)
 
 	router.Run(":1337")
 }
