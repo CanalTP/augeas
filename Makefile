@@ -3,18 +3,18 @@ VERSION := $(shell git describe --tag --always --dirty)
 .PHONY: setup
 setup: ## Install all the build and lint dependencies
 	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
-	go get -u golang.org/x/tools/cmd/cover
+	GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 	gometalinter --install --update
-	go mod download
+	GO111MODULE=on go mod download
 
 
 .PHONY: test
 test: ## Run all the tests
-	echo 'mode: atomic' > coverage.txt && go test -covermode=atomic -coverpkg=./... -coverprofile=coverage.txt -race -timeout=30s ./...
+	echo 'mode: atomic' > coverage.txt && GO111MODULE=on go test -covermode=atomic -coverpkg=./... -coverprofile=coverage.txt -race -timeout=30s ./...
 
 .PHONY: fasttest
 fasttest: ## Run short tests
-	echo 'mode: atomic' > coverage.txt && go test -short -covermode=atomic -coverprofile=coverage.txt -race -timeout=30s ./...
+	echo 'mode: atomic' > coverage.txt && GO111MODULE=on go test -short -covermode=atomic -coverprofile=coverage.txt -race -timeout=30s ./...
 
 .PHONY: cover
 cover: test ## Run all the tests and opens the coverage report
@@ -44,7 +44,7 @@ ci: lint test ## Run all the tests and code checks
 
 .PHONY: build
 build: ## Build a version
-	go build -tags=jsoniter -v ./cmd/...
+	GO111MODULE=on  go build -tags=jsoniter -v ./cmd/...
 
 .PHONY: clean
 clean: ## Remove temporary files
