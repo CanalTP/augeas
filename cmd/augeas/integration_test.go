@@ -13,6 +13,8 @@ import (
 	"github.com/CanalTP/augeas/serializer"
 )
 
+var MIN_PARK_DURATION uint64 = 300
+
 func performRequest(r http.Handler, method, path string) (int, *httptest.ResponseRecorder) {
 	req, _ := http.NewRequest(method, path, nil)
 	w := httptest.NewRecorder()
@@ -40,7 +42,7 @@ func compareCarParks(t *testing.T, code int, response *httptest.ResponseRecorder
 func TestCarParks(t *testing.T) {
 
 	carParks := poi_parser.ParsePoi("./fixtures/poi.txt", "amenity:parking", ";")
-	dm := augeas.NewDataManager(carParks)
+	dm := augeas.NewDataManager(carParks, MIN_PARK_DURATION)
 
 	router := SetupRouter(dm)
 
@@ -60,11 +62,11 @@ func TestCarParks(t *testing.T) {
 			args{router, "GET", "/v0/car_parks"},
 			http.StatusOK,
 			[]model.CarPark{
-				{model.Coordinate{Coords: [2]float64{2.285156, 48.872505}}, "937854398", "Étoile - Foch", 0, 0, 0, 0, 0},
-				{model.Coordinate{Coords: [2]float64{2.291498, 48.873689}}, "937950603", "Étoile - Foch", 0, 0, 0, 0, 0},
-				{model.Coordinate{Coords: [2]float64{2.284068, 48.872286}}, "939658365", "Étoile - Foch", 0, 0, 0, 0, 0},
-				{model.Coordinate{Coords: [2]float64{2.299415, 48.874107}}, "838076170", "Étoile Friedland", 0, 0, 0, 0, 0},
-				{model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, "838076561", "Étoile Friedland", 0, 0, 0, 0, 0},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.285156, 48.872505}}, ID: "937854398", Name: "Étoile - Foch"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.291498, 48.873689}}, ID: "937950603", Name: "Étoile - Foch"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.284068, 48.872286}}, ID: "939658365", Name: "Étoile - Foch"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.299415, 48.874107}}, ID: "838076170", Name: "Étoile Friedland"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, ID: "838076561", Name: "Étoile Friedland"},
 			},
 		},
 		{
@@ -72,7 +74,7 @@ func TestCarParks(t *testing.T) {
 			args{router, "GET", "/v0/car_parks/838076561"},
 			http.StatusOK,
 			[]model.CarPark{
-				{model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, "838076561", "Étoile Friedland", 0, 0, 0, 0, 0},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, ID: "838076561", Name: "Étoile Friedland"},
 			},
 		},
 	}
@@ -91,7 +93,7 @@ func compareParkDurations(t *testing.T, code int, response *httptest.ResponseRec
 		return false
 	}
 
-	marshalled, _ := json.Marshal(serializer.SerializeDurations(&targetPoint, speed, maxParkDuration, wantedCarParks))
+	marshalled, _ := json.Marshal(serializer.SerializeDurations(wantedCarParks))
 
 	if response.Body.String() != string(marshalled) {
 		t.Errorf("Response: %s", response.Body.String())
@@ -105,7 +107,7 @@ func compareParkDurations(t *testing.T, code int, response *httptest.ResponseRec
 func TestParkingDuration(t *testing.T) {
 
 	carParks := poi_parser.ParsePoi("./fixtures/poi.txt", "amenity:parking", ";")
-	dm := augeas.NewDataManager(carParks)
+	dm := augeas.NewDataManager(carParks, MIN_PARK_DURATION)
 
 	router := SetupRouter(dm)
 
@@ -129,9 +131,9 @@ func TestParkingDuration(t *testing.T) {
 			args{router, "GET", 2.300731, 48.874457, 1.11, 5, 1200},
 			http.StatusOK,
 			[]model.CarPark{
-				{model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, "838076561", "Étoile Friedland", 0, 0, 0, 0, 0},
-				{model.Coordinate{Coords: [2]float64{2.299415, 48.874107}}, "838076170", "Étoile Friedland", 0, 0, 0, 0, 0},
-				{model.Coordinate{Coords: [2]float64{2.291498, 48.873689}}, "937950603", "Étoile - Foch", 0, 0, 0, 0, 0},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, ID: "838076561", Name: "Étoile Friedland", DistanceToTarget: 0, ParkDuration: 300},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.299415, 48.874107}}, ID: "838076170", Name: "Étoile Friedland", DistanceToTarget: 103, ParkDuration: 432},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.291498, 48.873689}}, ID: "937950603", Name: "Étoile - Foch", DistanceToTarget: 680, ParkDuration: 1167},
 			},
 		},
 		{
@@ -139,7 +141,7 @@ func TestParkingDuration(t *testing.T) {
 			args{router, "GET", 2.300731, 48.874457, 1.11, 1, 99999},
 			http.StatusOK,
 			[]model.CarPark{
-				{model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, "838076561", "Étoile Friedland", 0, 0, 0, 0, 0},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, ID: "838076561", Name: "Étoile Friedland", DistanceToTarget: 0, ParkDuration: 300},
 			},
 		},
 	}

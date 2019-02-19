@@ -49,8 +49,8 @@ func GetParkDurationHandler(dm *DataManager) gin.HandlerFunc {
 		}
 
 		targetPoint := model.Coordinate{Coords: [2]float64{params.Lon, params.Lat}}
-		neighbours := dm.GetNearestCarPark(&targetPoint, params.N)
+		neighbours := dm.GetNearestCarPark(&targetPoint, params.N, params.WalkingSpeed, params.MaxParkDuration)
 
-		c.JSON(http.StatusOK, serializer.SerializeDurations(&targetPoint, params.WalkingSpeed, params.MaxParkDuration, neighbours))
+		c.JSON(http.StatusOK, serializer.SerializeDurations(neighbours))
 	}
 }

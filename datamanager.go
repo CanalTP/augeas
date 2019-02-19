@@ -2,21 +2,23 @@ package augeas
 
 import (
 	"log"
+	"math"
 
 	"github.com/CanalTP/augeas/model"
 	"github.com/hongshibao/go-kdtree"
 )
 
 type DataManager struct {
-	carParks []model.CarPark
-	kdTree   *kdtree.KDTree
+	carParks        []model.CarPark
+	minParkDuration uint64
+	kdTree          *kdtree.KDTree
 }
 
-func NewDataManager(carParks []model.CarPark) *DataManager {
+func NewDataManager(carParks []model.CarPark, minParkDuration uint64) *DataManager {
 	dm := DataManager{}
 
 	dm.carParks = carParks
-
+	dm.minParkDuration = minParkDuration
 	// Build the KdTree
 	points := make([]kdtree.Point, 0)
 
@@ -44,13 +46,27 @@ func (dm *DataManager) GetCarParkByID(id string) []model.CarPark {
 	return ret
 }
 
-func (dm *DataManager) GetNearestCarPark(targetPoint *model.Coordinate, n uint64) []model.CarPark {
+func (dm *DataManager) GetNearestCarPark(targetPoint *model.Coordinate, n uint64, walkingSpeed float64, maxParkingDuration uint64) []model.CarPark {
 	neighbours := dm.kdTree.KNN(targetPoint, int(n))
-	ret := make([]model.CarPark, len(neighbours))
+	ret := make([]model.CarPark, 0)
 	log.Printf("%d car parks have been found", len(neighbours))
-	for idx, n := range neighbours {
+	for _, n := range neighbours {
+		distance := targetPoint.Distance(n)
+		// Duration = min_park_duration + walking_duration
+		duration := uint64(distance*math.Sqrt(2)/walkingSpeed) + dm.minParkDuration
+		if duration > maxParkingDuration {
+			continue
+		}
+
+		// Downcasting
 		p := n.(*model.CarPark)
-		ret[idx] = *p
+
+		// Copy
+		newPark := *p
+		newPark.DistanceToTarget = uint64(distance)
+		newPark.ParkDuration = duration
+
+		ret = append(ret, newPark)
 	}
 	return ret
 }

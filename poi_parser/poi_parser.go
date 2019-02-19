@@ -26,14 +26,9 @@ func newCarPark(record []string, carParkType string) (*model.CarPark, error) {
 		return nil, err
 	}
 	return &model.CarPark{
-		Coordinate:   model.Coordinate{[2]float64{poiLon, poiLat}},
-		ID:           id,
-		Name:         name,
-		Total:        0,
-		Available:    0,
-		Occupied:     0,
-		AvailablePRM: 0,
-		OccupiedPRM:  0,
+		Coordinate: model.Coordinate{[2]float64{poiLon, poiLat}},
+		ID:         id,
+		Name:       name,
 	}, nil
 }
 

@@ -22,11 +22,11 @@ func TestParsePoi(t *testing.T) {
 			"simple parsing",
 			args{"./fixtures/poi.txt", "amenity:parking", ";"},
 			[]model.CarPark{
-				{model.Coordinate{[2]float64{2.285156, 48.872505}}, "937854398", "Étoile - Foch", 0, 0, 0, 0, 0},
-				{model.Coordinate{[2]float64{2.291498, 48.873689}}, "937950603", "Étoile - Foch", 0, 0, 0, 0, 0},
-				{model.Coordinate{[2]float64{2.284068, 48.872286}}, "939658365", "Étoile - Foch", 0, 0, 0, 0, 0},
-				{model.Coordinate{[2]float64{2.299415, 48.874107}}, "838076170", "Étoile Friedland", 0, 0, 0, 0, 0},
-				{model.Coordinate{[2]float64{2.300731, 48.874457}}, "838076561", "Étoile Friedland", 0, 0, 0, 0, 0},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.285156, 48.872505}}, ID: "937854398", Name: "Étoile - Foch"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.291498, 48.873689}}, ID: "937950603", Name: "Étoile - Foch"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.284068, 48.872286}}, ID: "939658365", Name: "Étoile - Foch"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.299415, 48.874107}}, ID: "838076170", Name: "Étoile Friedland"},
+				{Coordinate: model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, ID: "838076561", Name: "Étoile Friedland"},
 			},
 		},
 	}

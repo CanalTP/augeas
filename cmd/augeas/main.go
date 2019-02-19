@@ -21,6 +21,7 @@ func SetupRouter(dm *augeas.DataManager) *gin.Engine {
 func main() {
 
 	poiFile := flag.String("poi", "", "poi.txt file's path")
+	minParkDuration := flag.Int("min_park_duration", 300, "minimun park duration")
 	carParkType := flag.String("car_park_type", "amenity:parking", "car park's poi type")
 	csvComma := flag.String("csv_comma", ";", "csv delimiter")
 
@@ -28,7 +29,7 @@ func main() {
 
 	carParks := poi_parser.ParsePoi(*poiFile, *carParkType, *csvComma)
 
-	dm := augeas.NewDataManager(carParks)
+	dm := augeas.NewDataManager(carParks, uint64(*minParkDuration))
 
 	router := SetupRouter(dm)
 

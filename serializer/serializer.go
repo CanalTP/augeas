@@ -1,8 +1,6 @@
 package serializer
 
 import (
-	"math"
-
 	"github.com/CanalTP/augeas/model"
 )
 
@@ -11,11 +9,11 @@ type carParkResponse struct {
 	Name         string  `json:"name"`
 	Lon          float64 `json:"lon"`
 	Lat          float64 `json:"lat"`
-	Total        int     `json:"total_places"`
-	Available    int     `json:"available"`
-	Occupied     int     `json:"occupied"`
-	AvailablePRM int     `json:"available_PRM"`
-	OccupiedPRM  int     `json:"occupied_PRM"`
+	Total        uint64  `json:"total_places,default=0"`
+	Available    uint64  `json:"available,default=0"`
+	Occupied     uint64  `json:"occupied,default=0"`
+	AvailablePRM uint64  `json:"available_PRM,default=0"`
+	OccupiedPRM  uint64  `json:"occupied_PRM,default=0"`
 }
 
 type carParksResponse struct {
@@ -24,8 +22,8 @@ type carParksResponse struct {
 
 type durationResponse struct {
 	CarPark  carParkResponse `json:"car_park"`
-	Distance uint64          `json:"distance"`
-	Duration uint64          `json:"duration"`
+	Distance uint64          `json:"distance,default=0"`
+	Duration uint64          `json:"duration,default=0"`
 }
 
 type durationsResponse struct {
@@ -52,16 +50,11 @@ func SerializeCarParks(parks []model.CarPark) carParksResponse {
 	}
 }
 
-func SerializeDurations(target *model.Coordinate, speed float64, maxParkingDuration uint64, parks []model.CarPark) durationsResponse {
+func SerializeDurations(parks []model.CarPark) durationsResponse {
 	ret := make([]durationResponse, 0)
 	for _, p := range parks {
-		distance := target.Distance(&p)
-		duration := uint64(distance * math.Sqrt(2) / speed)
-		if duration > maxParkingDuration {
-			continue
-		}
 		ret = append(ret, durationResponse{
-			carParkResponse{
+			CarPark: carParkResponse{
 				ID:           p.ID,
 				Name:         p.Name,
 				Lon:          p.Lon(),
@@ -72,8 +65,8 @@ func SerializeDurations(target *model.Coordinate, speed float64, maxParkingDurat
 				AvailablePRM: p.AvailablePRM,
 				OccupiedPRM:  p.OccupiedPRM,
 			},
-			uint64(distance),
-			duration,
+			Distance: p.DistanceToTarget,
+			Duration: p.ParkDuration,
 		})
 	}
 	return durationsResponse{
