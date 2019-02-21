@@ -87,13 +87,13 @@ func TestCarParks(t *testing.T) {
 }
 
 func compareParkDurations(t *testing.T, code int, response *httptest.ResponseRecorder,
-	targetPoint model.Coordinate, speed float64, maxParkDuration uint64, wantedCode int, wantedCarParks []model.CarPark) bool {
+	targetPoint model.Coordinate, speed float64, maxParkDuration uint64, wantedCode int, wantedCarParks []model.CarPark, wantedParkZones []model.ParkZone) bool {
 	if code != wantedCode {
 		t.Errorf("Response Code = %d, Wanted Code %d", code, wantedCode)
 		return false
 	}
 
-	marshalled, _ := json.Marshal(serializer.SerializeDurations(wantedCarParks))
+	marshalled, _ := json.Marshal(serializer.SerializeDurations(wantedCarParks, wantedParkZones))
 
 	if response.Body.String() != string(marshalled) {
 		t.Errorf("Response: %s", response.Body.String())
@@ -121,10 +121,11 @@ func TestParkingDuration(t *testing.T) {
 		maxParkDuration uint64
 	}
 	tests := []struct {
-		name           string
-		args           args
-		wantedCode     int
-		wantedCarParks []model.CarPark
+		name            string
+		args            args
+		wantedCode      int
+		wantedCarParks  []model.CarPark
+		wantedParkZones []model.ParkZone
 	}{
 		{
 			"test /v0/park_duration?lon=2.300731&lat=48.874457&n=5&max_park_duration=500",
@@ -135,6 +136,7 @@ func TestParkingDuration(t *testing.T) {
 				{Coordinate: model.Coordinate{Coords: [2]float64{2.299415, 48.874107}}, ID: "838076170", Name: "Étoile Friedland", DistanceToTarget: 103, ParkDuration: 432},
 				{Coordinate: model.Coordinate{Coords: [2]float64{2.291498, 48.873689}}, ID: "937950603", Name: "Étoile - Foch", DistanceToTarget: 680, ParkDuration: 1167},
 			},
+			[]model.ParkZone{},
 		},
 		{
 			"test /v0/park_duration?lon=2.300731&lat=48.874457&n=1&max_park_duration=99999",
@@ -143,6 +145,23 @@ func TestParkingDuration(t *testing.T) {
 			[]model.CarPark{
 				{Coordinate: model.Coordinate{Coords: [2]float64{2.300731, 48.874457}}, ID: "838076561", Name: "Étoile Friedland", DistanceToTarget: 0, ParkDuration: 300},
 			},
+			[]model.ParkZone{},
+		},
+		{
+			"test /v0/park_duration?lon=2.300731&lat=48.874457&n=1&max_park_duration=99999",
+			args{router, "GET", 2.300731, 48.874457, 1.11, 1, 250},
+			http.StatusOK,
+			[]model.CarPark{},
+			[]model.ParkZone{
+				model.NewParkZone("Area 51",
+					uint64(250), []model.Coordinate{
+						{Coords: [2]float64{2.304731, 48.876457}},
+						{Coords: [2]float64{2.296731, 48.876457}},
+						{Coords: [2]float64{2.296731, 48.872457}},
+						{Coords: [2]float64{2.304731, 48.872457}},
+						{Coords: [2]float64{2.304731, 48.876457}},
+					}),
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -150,7 +169,8 @@ func TestParkingDuration(t *testing.T) {
 			path := fmt.Sprintf("/v0/park_duration?lon=%f&lat=%f&n=%d&max_park_duration=%d&walking_speed=%f",
 				tt.args.lon, tt.args.lat, tt.args.n, tt.args.maxParkDuration, tt.args.walkingSpeed)
 			if code, response := performRequest(tt.args.router, tt.args.method, path); !compareParkDurations(t, code, response,
-				model.Coordinate{Coords: [2]float64{tt.args.lon, tt.args.lat}}, tt.args.walkingSpeed, tt.args.maxParkDuration, http.StatusOK, tt.wantedCarParks) {
+				model.Coordinate{Coords: [2]float64{tt.args.lon, tt.args.lat}},
+				tt.args.walkingSpeed, tt.args.maxParkDuration, http.StatusOK, tt.wantedCarParks, tt.wantedParkZones) {
 			}
 		})
 	}

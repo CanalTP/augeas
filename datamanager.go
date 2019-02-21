@@ -48,8 +48,8 @@ func (dm *DataManager) GetCarParkByID(id string) []model.CarPark {
 
 func (dm *DataManager) GetNearestCarPark(targetPoint *model.Coordinate, n uint64, walkingSpeed float64, maxParkingDuration uint64) []model.CarPark {
 	neighbours := dm.kdTree.KNN(targetPoint, int(n))
-	ret := make([]model.CarPark, 0)
-	log.Printf("%d car parks have been found", len(neighbours))
+	ret := []model.CarPark{}
+	log.Printf("%d car parks have been found by KNN", len(neighbours))
 	for _, n := range neighbours {
 		distance := targetPoint.Distance(n)
 		// Duration = min_park_duration + walking_duration
@@ -68,5 +68,6 @@ func (dm *DataManager) GetNearestCarPark(targetPoint *model.Coordinate, n uint64
 
 		ret = append(ret, newPark)
 	}
+	log.Printf("%d car parks have been found", len(ret))
 	return ret
 }

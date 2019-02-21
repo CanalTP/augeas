@@ -49,8 +49,21 @@ func GetParkDurationHandler(dm *DataManager) gin.HandlerFunc {
 		}
 
 		targetPoint := model.Coordinate{Coords: [2]float64{params.Lon, params.Lat}}
-		neighbours := dm.GetNearestCarPark(&targetPoint, params.N, params.WalkingSpeed, params.MaxParkDuration)
-
-		c.JSON(http.StatusOK, serializer.SerializeDurations(neighbours))
+		nearestCarParks := dm.GetNearestCarPark(&targetPoint, params.N, params.WalkingSpeed, params.MaxParkDuration)
+		// We cannot find car parks that meet all criterias, so we just tell the user
+		// to park in a park zone.
+		// Since there is no park zones defined in the data so far, we just creat one around the target point
+		parkZones := make([]model.ParkZone, 0)
+		if len(nearestCarParks) == 0 {
+			parkZones = append(parkZones, model.NewParkZone("Area 51",
+				params.MaxParkDuration, []model.Coordinate{
+					{Coords: [2]float64{targetPoint.Lon() + 0.004, targetPoint.Lat() + 0.002}},
+					{Coords: [2]float64{targetPoint.Lon() - 0.004, targetPoint.Lat() + 0.002}},
+					{Coords: [2]float64{targetPoint.Lon() - 0.004, targetPoint.Lat() - 0.002}},
+					{Coords: [2]float64{targetPoint.Lon() + 0.004, targetPoint.Lat() - 0.002}},
+					{Coords: [2]float64{targetPoint.Lon() + 0.004, targetPoint.Lat() + 0.002}},
+				}))
+		}
+		c.JSON(http.StatusOK, serializer.SerializeDurations(nearestCarParks, parkZones))
 	}
 }

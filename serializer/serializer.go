@@ -16,14 +16,20 @@ type carParkResponse struct {
 	OccupiedPRM  uint64  `json:"occupied_PRM,default=0"`
 }
 
+type parkZoneResponse struct {
+	Name    string        `json:"name"`
+	GeoJSON model.GeoJSON `json:"geojson"`
+}
+
 type carParksResponse struct {
 	CarParks []carParkResponse `json:"car_parks"`
 }
 
 type durationResponse struct {
-	CarPark  carParkResponse `json:"car_park"`
-	Distance uint64          `json:"distance,default=0"`
-	Duration uint64          `json:"duration,default=0"`
+	CarPark  *carParkResponse  `json:"car_park,omitempty"`
+	ParkZone *parkZoneResponse `json:"park_zone,omitempty"`
+	Distance uint64            `json:"distance,default=0"`
+	Duration uint64            `json:"duration,default=0"`
 }
 
 type durationsResponse struct {
@@ -50,11 +56,12 @@ func SerializeCarParks(parks []model.CarPark) carParksResponse {
 	}
 }
 
-func SerializeDurations(parks []model.CarPark) durationsResponse {
-	ret := make([]durationResponse, 0)
+func SerializeDurations(parks []model.CarPark, zones []model.ParkZone) durationsResponse {
+
+	ret := []durationResponse{}
 	for _, p := range parks {
 		ret = append(ret, durationResponse{
-			CarPark: carParkResponse{
+			CarPark: &carParkResponse{
 				ID:           p.ID,
 				Name:         p.Name,
 				Lon:          p.Lon(),
@@ -67,6 +74,16 @@ func SerializeDurations(parks []model.CarPark) durationsResponse {
 			},
 			Distance: p.DistanceToTarget,
 			Duration: p.ParkDuration,
+		})
+	}
+	for _, z := range zones {
+		ret = append(ret, durationResponse{
+			ParkZone: &parkZoneResponse{
+				Name:    z.Name,
+				GeoJSON: z.GeoJSON,
+			},
+			Distance: z.DistanceToTarget,
+			Duration: z.ParkDuration,
 		})
 	}
 	return durationsResponse{

@@ -62,7 +62,7 @@ Parameters of this end point:
 `max_park_duration`: the max time(in second) it'll take to park your car, all car parks whose `duration` are greater than this value will be filtered,  `walking_speed=1200`
 
 
-Here is an example of the response of `/v0/park_duration`
+Here is an example of the response of `/v0/park_duration`:
 
 Note that in this example, the requested location falls right on the car park  `Étoile Friedland`, the reason why you find `0` on `distance`. But the duration is not `0`. The minimun value of the park duration is 300s by default. You can configure that value when you start the service.
 
@@ -103,6 +103,61 @@ Note that in this example, the requested location falls right on the car park  `
 }
 ```
 
+Here is an another example of the response of `/v0/park_duration`:
 
+When your location is fat far away, so far away that Augeas cannot find car_park within `max_park_duration`, Augeas will just return a `park_zone` that is just a zone around your location. (This `park_zone` will be better defined in the future version).
+
+
+```json
+{
+  "durations": [
+    {
+      "park_zone": {
+        "name": "Area 51",
+        "geojson": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "whatever": "Whatever, Who cares"
+              },
+              "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      4.173311523437499,
+                      48.876457
+                    ],
+                    [
+                      4.1653115234374996,
+                      48.876457
+                    ],
+                    [
+                      4.1653115234374996,
+                      48.872457
+                    ],
+                    [
+                      4.173311523437499,
+                      48.872457
+                    ],
+                    [
+                      4.173311523437499,
+                      48.876457
+                    ]
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "distance": 0,
+      "duration": 1200
+    }
+  ]
+}
+```
 
 
