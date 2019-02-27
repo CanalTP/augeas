@@ -11,9 +11,10 @@ import (
 func SetupRouter(dm *augeas.DataManager) *gin.Engine {
 	router := gin.Default()
 
-	router.GET("/v0/car_parks", augeas.GetCarParksHanlder(dm))
-	router.GET("/v0/car_parks/:car_park_id", augeas.GetCarParkByIDHanlder(dm))
-	router.GET("/v0/park_duration", augeas.GetParkDurationHandler(dm))
+	router.GET("/v0/car_parks", augeas.GETCarParksHanlder(dm))
+	router.GET("/v0/car_parks/:car_park_id", augeas.GETCarParkByIDHanlder(dm))
+	router.GET("/v0/park_duration", augeas.GETParkDurationHandler(dm))
+	router.POST("/v0/park_duration", augeas.POSTParkDurationHandler(dm))
 
 	return router
 }

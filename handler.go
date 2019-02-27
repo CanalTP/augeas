@@ -9,13 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetCarParksHanlder(dm *DataManager) gin.HandlerFunc {
+func GETCarParksHanlder(dm *DataManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusOK, serializer.SerializeCarParks(dm.GetAllCarParks()))
 	}
 }
 
-func GetCarParkByIDHanlder(dm *DataManager) gin.HandlerFunc {
+func GETCarParkByIDHanlder(dm *DataManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("car_park_id")
 		c.JSON(http.StatusOK, serializer.SerializeCarParks(dm.GetCarParkByID(id)))
@@ -23,9 +23,9 @@ func GetCarParkByIDHanlder(dm *DataManager) gin.HandlerFunc {
 }
 
 type durationParams struct {
-	Lon             float64 `form:"lon"`
-	Lat             float64 `form:"lat"`
-	N               uint64  `form:"n,default=5"`
+	Lon             float64 `form:"lon,default=0"`
+	Lat             float64 `form:"lat,default=0"`
+	N               uint64  `form:"n,default=1"`
 	WalkingSpeed    float64 `form:"walking_speed,default=1.11"`
 	MaxParkDuration uint64  `form:"max_park_duration,default=1200"`
 }
@@ -40,7 +40,7 @@ func getParams(c *gin.Context) (*durationParams, error) {
 	return &params, nil
 }
 
-func GetParkDurationHandler(dm *DataManager) gin.HandlerFunc {
+func GETParkDurationHandler(dm *DataManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		params, err := getParams(c)
 		if err != nil {
@@ -65,5 +65,36 @@ func GetParkDurationHandler(dm *DataManager) gin.HandlerFunc {
 				}))
 		}
 		c.JSON(http.StatusOK, serializer.SerializeDurations(nearestCarParks, parkZones))
+	}
+}
+
+func POSTParkDurationHandler(dm *DataManager) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		input := struct {
+			N               uint64       `json:"n,default=1"`
+			WalkingSpeed    float64      `json:"walking_speed,default=1.11"`
+			MaxParkDuration uint64       `json:"max_park_duration,default=1200"`
+			Coords          [][2]float64 `json:"coords" binding:"required"`
+		}{}
+		err := c.BindJSON(&input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ret := []uint64{}
+
+		for _, coord := range input.Coords {
+			targetPoint := model.Coordinate{Coords: [2]float64{coord[0], coord[1]}}
+			nearestCarParks := dm.GetNearestCarPark(&targetPoint, input.N, input.WalkingSpeed, input.MaxParkDuration)
+			if len(nearestCarParks) != 0 {
+				ret = append(ret, nearestCarParks[0].ParkDuration)
+			} else {
+				// We cannot find car parks that meet all criterias, so we just tell the user
+				// to park in a park zone.
+				// Since there is no park zones defined in the data so far, we just creat one around the target point
+				ret = append(ret, input.MaxParkDuration)
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"durations": ret})
 	}
 }
