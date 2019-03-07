@@ -26,7 +26,7 @@ func newCarPark(record []string, carParkType string) (*model.CarPark, error) {
 		return nil, err
 	}
 	return &model.CarPark{
-		Coordinate: model.Coordinate{[2]float64{poiLon, poiLat}},
+		Coordinate: model.Coordinate{Coords: [2]float64{poiLon, poiLat}},
 		ID:         id,
 		Name:       name,
 	}, nil
@@ -34,24 +34,22 @@ func newCarPark(record []string, carParkType string) (*model.CarPark, error) {
 
 func ParsePoi(poiFile string, carParkType string, csvComma string) []model.CarPark {
 	f, err := os.Open(poiFile)
+	if err != nil {
+		log.Panicln(err)
+		panic(err)
+	}
 	defer f.Close()
 
-	if err != nil {
-		log.Panicln(err)
-		panic(err)
-	}
 	csvr := csv.NewReader(f)
 	csvr.Comma = ([]rune(csvComma))[0]
-
-	if err != nil {
-		log.Panicln(err)
-		panic(err)
-	}
 
 	carParks := make([]model.CarPark, 0)
 
 	// Skip the first line (Header)
-	csvr.Read()
+	if _, err := csvr.Read(); err != nil {
+		log.Panicln(err)
+		panic(err)
+	}
 
 	log.Printf("Parsing poi file: %s with carParcType: %s", poiFile, carParkType)
 	for {

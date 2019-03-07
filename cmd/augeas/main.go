@@ -34,5 +34,7 @@ func main() {
 
 	router := SetupRouter(dm)
 
-	router.Run(":1337")
+	if err := router.Run(":1337"); err != nil {
+		panic(err)
+	}
 }

@@ -2,11 +2,8 @@ VERSION := $(shell git describe --tag --always --dirty)
 
 .PHONY: setup
 setup: ## Install all the build and lint dependencies
-	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
+	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.15.0
 	GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
-	gometalinter --install --update
-	GO111MODULE=on go mod download
-
 
 .PHONY: test
 test: ## Run all the tests
@@ -23,21 +20,7 @@ cover: test ## Run all the tests and opens the coverage report
 
 .PHONY: lint
 lint: ## Run all the linters
-	gometalinter --vendor --disable-all \
-		--enable=deadcode \
-		--enable=ineffassign \
-		--enable=gosimple \
-		--enable=staticcheck \
-		--enable=gofmt \
-		--enable=goimports \
-		--enable=misspell \
-		--enable=errcheck \
-		--enable=vet \
-		--enable=vetshadow \
-		--deadline=10m \
-		--exclude pbnavitia \
-		./...
-#--enable=golint \
+	golangci-lint run 
 
 .PHONY: ci
 ci: lint test ## Run all the tests and code checks
@@ -56,7 +39,7 @@ install: ## install project and it's dependancies, useful for autocompletion fea
 
 
 .PHONY: version
-version: ## display version of gormungandr
+version: ## display version of augeas
 	@echo $(VERSION)
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

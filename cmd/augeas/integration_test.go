@@ -81,6 +81,7 @@ func TestCarParks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if code, response := performRequest(tt.args.router, tt.args.method, tt.args.path); !compareCarParks(t, code, response, tt.wantedCode, tt.wantedCarParks) {
+				t.Errorf("TestCarParks %v %v , want %v", tt.args.method, tt.args.path, tt.wantedCarParks)
 			}
 		})
 	}
@@ -171,6 +172,7 @@ func TestParkingDuration(t *testing.T) {
 			if code, response := performRequest(tt.args.router, tt.args.method, path); !compareParkDurations(t, code, response,
 				model.Coordinate{Coords: [2]float64{tt.args.lon, tt.args.lat}},
 				tt.args.walkingSpeed, tt.args.maxParkDuration, http.StatusOK, tt.wantedCarParks, tt.wantedParkZones) {
+				t.Errorf("TestParkingDuration %v, want %v %v", tt.args.method, tt.wantedCarParks, tt.wantedParkZones)
 			}
 		})
 	}

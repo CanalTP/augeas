@@ -7,7 +7,7 @@ import (
 )
 
 type Coordinate struct {
-	Coords [2]float64
+	Coords [2]float64 `json:"t"`
 }
 
 func (c *Coordinate) Lon() float64 {
