@@ -1,0 +1,8 @@
+poi_id;poi_name;poi_weight;poi_visible;poi_lat;poi_lon;poi_type_id;poi_address_number;poi_address_name
+937854398;"Étoile - Foch";0;1;48.872505;2.285156;amenity:parking;;""
+937950603;"Étoile - Foch";0;1;48.873689;2.291498;amenity:parking;;""
+939658365;"Étoile - Foch";0;1;48.872286;2.284068;amenity:parking;;""
+838076170;"Étoile Friedland";0;1;48.874107;2.299415;amenity:parking;;""
+838076561;"Étoile Friedland";0;1;48.874457;2.300731;amenity:parking;;""
+3688311710;"Études Supérieures Appliquées aux Affaires";0;1;48.867101;2.292383;college;;""
+479432507;"Île de la Cité Pont Neuf";0;1;48.857075;2.341808;amenity:bicycle_rental;;""
